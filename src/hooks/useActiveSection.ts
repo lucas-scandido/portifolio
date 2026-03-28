@@ -1,29 +1,31 @@
 import { useEffect, useState } from 'react'
 
-const SECTIONS = ['hero', 'about', 'skills', 'experience', 'projects']
+const SECTIONS = ['hero', 'about', 'experience', 'skills', 'projects']
 
 export function useActiveSection(): string {
     const [activeSection, setActiveSection] = useState('hero')
 
     useEffect(() => {
-        const observers: IntersectionObserver[] = []
+        const handleScroll = () => {
+            const scrollY = window.scrollY
+            const viewportHeight = window.innerHeight
+            let current = 'hero'
 
-        SECTIONS.forEach(id => {
-            const element = document.getElementById(id)
-            if (!element) return
+            for (const id of SECTIONS) {
+                const el = document.getElementById(id)
+                if (!el) continue
+                const top = el.getBoundingClientRect().top + scrollY
+                if (scrollY >= top - viewportHeight * 0.4) {
+                    current = id
+                }
+            }
 
-            const observer = new IntersectionObserver(
-                ([entry]) => {
-                    if (entry.isIntersecting) setActiveSection(id)
-                },
-                { threshold: 0.4 }
-            )
+            setActiveSection(current)
+        }
 
-            observer.observe(element)
-            observers.push(observer)
-        })
-
-        return () => observers.forEach(obs => obs.disconnect())
+        handleScroll()
+        window.addEventListener('scroll', handleScroll, { passive: true })
+        return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 
     return activeSection
